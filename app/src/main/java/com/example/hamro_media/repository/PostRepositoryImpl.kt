@@ -1,10 +1,10 @@
 package com.example.hamro_media.repository
 
 import android.content.Context
+import android.net.Uri
 import com.cloudinary.android.MediaManager
 import com.cloudinary.android.callback.ErrorInfo
 import com.cloudinary.android.callback.UploadCallback
-import com.example.hamro_media.model.Comment
 import com.example.hamro_media.model.Post
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
@@ -137,67 +137,46 @@ class PostRepositoryImpl(
         }
     }
 
-    override suspend fun addComment(comment: Comment): Result<Unit> {
-        return try {
-            firestore.collection("comments")
-                .document(comment.commentId)
-                .set(comment)
-                .await()
-            
-            firestore.collection("posts")
-                .document(comment.postId)
-                .update("commentCount", FieldValue.increment(1))
-                .await()
-            
-            Result.success(Unit)
-        } catch (e: Exception) {
-            Result.failure(e)
-        }
-    }
-
-    override suspend fun getComments(postId: String): Result<List<Comment>> {
-        return try {
-            val querySnapshot = firestore.collection("comments")
-                .whereEqualTo("postId", postId)
-                .orderBy("createdAt", Query.Direction.ASCENDING)
-                .get()
-                .await()
-            
-            val comments = querySnapshot.documents.mapNotNull { document ->
-                document.toObject(Comment::class.java)
-            }
-            Result.success(comments)
-        } catch (e: Exception) {
-            Result.failure(e)
-        }
-    }
-
     override suspend fun uploadImageToCloudinary(imageUri: String): Result<String> {
         return suspendCoroutine { continuation ->
-            MediaManager.get().upload(imageUri)
-                .callback(object : UploadCallback {
-                    override fun onStart(requestId: String) {}
+            try {
+                val uri = Uri.parse(imageUri)
+                val inputStream = context.contentResolver.openInputStream(uri)
+                
+                if (inputStream != null) {
+                    val bytes = inputStream.readBytes()
+                    inputStream.close()
                     
-                    override fun onProgress(requestId: String, bytes: Long, totalBytes: Long) {}
-                    
-                    override fun onSuccess(requestId: String, resultData: Map<*, *>) {
-                        val imageUrl = resultData["secure_url"] as? String
-                        if (imageUrl != null) {
-                            continuation.resume(Result.success(imageUrl))
-                        } else {
-                            continuation.resume(Result.failure(Exception("Failed to get image URL")))
-                        }
-                    }
-                    
-                    override fun onError(requestId: String, error: ErrorInfo) {
-                        continuation.resume(Result.failure(Exception(error.description)))
-                    }
-                    
-                    override fun onReschedule(requestId: String, error: ErrorInfo) {
-                        continuation.resume(Result.failure(Exception(error.description)))
-                    }
-                })
-                .dispatch()
+                    MediaManager.get().upload(bytes)
+                        .callback(object : UploadCallback {
+                            override fun onStart(requestId: String) {}
+                            
+                            override fun onProgress(requestId: String, bytes: Long, totalBytes: Long) {}
+                            
+                            override fun onSuccess(requestId: String, resultData: Map<*, *>) {
+                                val imageUrl = resultData["secure_url"] as? String
+                                if (imageUrl != null) {
+                                    continuation.resume(Result.success(imageUrl))
+                                } else {
+                                    continuation.resume(Result.failure(Exception("Failed to get image URL")))
+                                }
+                            }
+                            
+                            override fun onError(requestId: String, error: ErrorInfo) {
+                                continuation.resume(Result.failure(Exception(error.description)))
+                            }
+                            
+                            override fun onReschedule(requestId: String, error: ErrorInfo) {
+                                continuation.resume(Result.failure(Exception(error.description)))
+                            }
+                        })
+                        .dispatch()
+                } else {
+                    continuation.resume(Result.failure(Exception("Unable to open input stream for URI: $imageUri")))
+                }
+            } catch (e: Exception) {
+                continuation.resume(Result.failure(Exception("Error processing image URI: ${e.message}")))
+            }
         }
     }
 }
