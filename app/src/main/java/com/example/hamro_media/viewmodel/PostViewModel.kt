@@ -3,7 +3,6 @@ package com.example.hamro_media.viewmodel
 import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.hamro_media.model.Comment
 import com.example.hamro_media.model.Post
 import com.example.hamro_media.repository.PostRepository
 import com.example.hamro_media.repository.PostRepositoryImpl
@@ -20,9 +19,6 @@ class PostViewModel(
     
     private val _postState = MutableStateFlow(PostState())
     val postState: StateFlow<PostState> = _postState.asStateFlow()
-    
-    private val _commentsState = MutableStateFlow(CommentsState())
-    val commentsState: StateFlow<CommentsState> = _commentsState.asStateFlow()
 
     fun loadPosts() {
         viewModelScope.launch {
@@ -129,50 +125,12 @@ class PostViewModel(
         }
     }
 
-    fun addComment(comment: Comment) {
-        viewModelScope.launch {
-            _commentsState.value = _commentsState.value.copy(isLoading = true, error = null)
-            
-            postRepository.addComment(comment)
-                .onSuccess {
-                    loadComments(comment.postId)
-                }
-                .onFailure { exception ->
-                    _commentsState.value = _commentsState.value.copy(
-                        isLoading = false,
-                        error = exception.message
-                    )
-                }
-        }
-    }
-
-    fun loadComments(postId: String) {
-        viewModelScope.launch {
-            _commentsState.value = _commentsState.value.copy(isLoading = true, error = null)
-            
-            postRepository.getComments(postId)
-                .onSuccess { comments ->
-                    _commentsState.value = _commentsState.value.copy(
-                        isLoading = false,
-                        comments = comments
-                    )
-                }
-                .onFailure { exception ->
-                    _commentsState.value = _commentsState.value.copy(
-                        isLoading = false,
-                        error = exception.message
-                    )
-                }
-        }
-    }
-    
     fun clearPostCreatedFlag() {
         _postState.value = _postState.value.copy(isPostCreated = false)
     }
 
     fun clearError() {
         _postState.value = _postState.value.copy(error = null)
-        _commentsState.value = _commentsState.value.copy(error = null)
     }
 }
 
@@ -181,11 +139,5 @@ data class PostState(
     val posts: List<Post> = emptyList(),
     val userPosts: List<Post> = emptyList(),
     val isPostCreated: Boolean = false,
-    val error: String? = null
-)
-
-data class CommentsState(
-    val isLoading: Boolean = false,
-    val comments: List<Comment> = emptyList(),
     val error: String? = null
 )
