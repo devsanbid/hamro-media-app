@@ -28,8 +28,16 @@ fun EditProfileActivity(
     val authState by authViewModel.authState.collectAsState()
     val currentUser by authViewModel.currentUser.collectAsState()
     
-    var username by remember { mutableStateOf(currentUser?.username ?: "") }
-    var bio by remember { mutableStateOf(currentUser?.bio ?: "") }
+    var username by remember { mutableStateOf("") }
+    var bio by remember { mutableStateOf("") }
+    
+    // Update fields when currentUser changes
+    LaunchedEffect(currentUser) {
+        currentUser?.let { user ->
+            username = user.username
+            bio = user.bio
+        }
+    }
     var isLoading by remember { mutableStateOf(false) }
     
     Scaffold(
@@ -52,11 +60,16 @@ fun EditProfileActivity(
                 actions = {
                     TextButton(
                         onClick = {
-                            isLoading = true
-                            // TODO: Implement profile update logic
-                            // authViewModel.updateProfile(username, bio)
-                            isLoading = false
-                            onNavigateBack()
+                            currentUser?.let { user ->
+                                isLoading = true
+                                val updatedUser = user.copy(
+                                    username = username.trim(),
+                                    bio = bio.trim()
+                                )
+                                authViewModel.updateProfile(updatedUser)
+                                isLoading = false
+                                onNavigateBack()
+                            }
                         },
                         enabled = !isLoading
                     ) {
