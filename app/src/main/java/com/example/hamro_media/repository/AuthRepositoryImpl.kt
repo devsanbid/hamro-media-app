@@ -90,4 +90,122 @@ class AuthRepositoryImpl(
             Result.failure(e)
         }
     }
+
+    override suspend fun followUser(currentUserId: String, targetUserId: String): Result<Unit> {
+        return try {
+            // Add to current user's following list
+            firestore.collection("users")
+                .document(currentUserId)
+                .collection("following")
+                .document(targetUserId)
+                .set(mapOf("timestamp" to System.currentTimeMillis()))
+                .await()
+            
+            // Add to target user's followers list
+            firestore.collection("users")
+                .document(targetUserId)
+                .collection("followers")
+                .document(currentUserId)
+                .set(mapOf("timestamp" to System.currentTimeMillis()))
+                .await()
+            
+            // Update follower/following counts
+            updateFollowCounts(currentUserId, targetUserId, true)
+            
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    override suspend fun unfollowUser(currentUserId: String, targetUserId: String): Result<Unit> {
+        return try {
+            // Remove from current user's following list
+            firestore.collection("users")
+                .document(currentUserId)
+                .collection("following")
+                .document(targetUserId)
+                .delete()
+                .await()
+            
+            // Remove from target user's followers list
+            firestore.collection("users")
+                .document(targetUserId)
+                .collection("followers")
+                .document(currentUserId)
+                .delete()
+                .await()
+            
+            // Update follower/following counts
+            updateFollowCounts(currentUserId, targetUserId, false)
+            
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    override suspend fun isFollowing(currentUserId: String, targetUserId: String): Result<Boolean> {
+        return try {
+            val document = firestore.collection("users")
+                .document(currentUserId)
+                .collection("following")
+                .document(targetUserId)
+                .get()
+                .await()
+            Result.success(document.exists())
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    override suspend fun updateUserStats(userId: String, postsCount: Int?, followersCount: Int?, followingCount: Int?): Result<Unit> {
+        return try {
+            val updates = mutableMapOf<String, Any>()
+            postsCount?.let { updates["postsCount"] = it }
+            followersCount?.let { updates["followersCount"] = it }
+            followingCount?.let { updates["followingCount"] = it }
+            
+            if (updates.isNotEmpty()) {
+                firestore.collection("users")
+                    .document(userId)
+                    .update(updates)
+                    .await()
+            }
+            
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    private suspend fun updateFollowCounts(currentUserId: String, targetUserId: String, isFollowing: Boolean) {
+        try {
+            // Get current counts
+            val currentUserDoc = firestore.collection("users").document(currentUserId).get().await()
+            val targetUserDoc = firestore.collection("users").document(targetUserId).get().await()
+            
+            val currentUser = currentUserDoc.toObject(User::class.java)
+            val targetUser = targetUserDoc.toObject(User::class.java)
+            
+            if (currentUser != null && targetUser != null) {
+                val followingDelta = if (isFollowing) 1 else -1
+                val followersDelta = if (isFollowing) 1 else -1
+                
+                // Update current user's following count
+                firestore.collection("users")
+                    .document(currentUserId)
+                    .update("followingCount", (currentUser.followingCount + followingDelta).coerceAtLeast(0))
+                    .await()
+                
+                // Update target user's followers count
+                firestore.collection("users")
+                    .document(targetUserId)
+                    .update("followersCount", (targetUser.followersCount + followersDelta).coerceAtLeast(0))
+                    .await()
+            }
+        } catch (e: Exception) {
+            // Log error but don't fail the main operation
+        }
+    }
 }
