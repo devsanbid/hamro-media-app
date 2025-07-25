@@ -20,6 +20,7 @@ import com.example.hamro_media.viewmodel.AuthViewModel
 fun SettingsActivity(
     onNavigateBack: () -> Unit,
     onNavigateToLogin: () -> Unit,
+    onNavigateToEditProfile: () -> Unit,
     authViewModel: AuthViewModel = viewModel()
 ) {
     val authState by authViewModel.authState.collectAsState()
@@ -58,7 +59,7 @@ fun SettingsActivity(
                     title = "Edit Profile",
                     subtitle = "Change your profile information",
                     onClick = {
-                        // TODO: Navigate to edit profile
+                        onNavigateToEditProfile()
                     }
                 )
                 
