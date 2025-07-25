@@ -22,7 +22,6 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.MoreVert
-import androidx.compose.material.icons.outlined.ChatBubbleOutline
 import androidx.compose.material.icons.outlined.Send
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -59,12 +58,10 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeActivity(
     onNavigateToCreatePost: () -> Unit,
     onNavigateToProfile: (String) -> Unit,
-    onNavigateToComments: (String) -> Unit,
     postViewModel: PostViewModel? = null,
     authViewModel: AuthViewModel? = null
 ) {
@@ -78,42 +75,11 @@ fun HomeActivity(
     LaunchedEffect(Unit) {
         actualPostViewModel.loadPosts()
     }
-    
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = {
-                    Text(
-                        text = "Hamro Media",
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 20.sp
-                    )
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.surface,
-                    titleContentColor = MaterialTheme.colorScheme.onSurface
-                )
-            )
-        },
-        floatingActionButton = {
-            FloatingActionButton(
-                onClick = onNavigateToCreatePost,
-                containerColor = MaterialTheme.colorScheme.primary
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Add,
-                    contentDescription = "Create Post",
-                    tint = Color.White
-                )
-            }
-        }
-    ) { paddingValues ->
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(paddingValues)
-                .background(MaterialTheme.colorScheme.background)
-        ) {
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(MaterialTheme.colorScheme.background)
+    ) {
             when {
                 postState.isLoading && postState.posts.isEmpty() -> {
                     Box(
@@ -165,7 +131,6 @@ fun HomeActivity(
                                         actualPostViewModel.unlikePost(post.id, user.userId)
                                     }
                                 },
-                                onCommentClick = { onNavigateToComments(post.id) },
                                 onProfileClick = { onNavigateToProfile(post.userId) }
                             )
                         }
@@ -208,7 +173,6 @@ fun HomeActivity(
                         )
                     }
                 }
-            }
         }
     }
 }
@@ -218,7 +182,6 @@ fun PostItem(
     post: Post,
     onLikeClick: () -> Unit,
     onUnlikeClick: () -> Unit,
-    onCommentClick: () -> Unit,
     onProfileClick: () -> Unit
 ) {
     Card(
@@ -322,14 +285,6 @@ fun PostItem(
                     )
                 }
                 
-                IconButton(onClick = onCommentClick) {
-                    Icon(
-                        imageVector = Icons.Outlined.ChatBubbleOutline,
-                        contentDescription = "Comment",
-                        tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
-                    )
-                }
-                
                 IconButton(onClick = { /* TODO: Share functionality */ }) {
                     Icon(
                         imageVector = Icons.Outlined.Send,
@@ -370,18 +325,6 @@ fun PostItem(
                         overflow = TextOverflow.Ellipsis
                     )
                 }
-            }
-            
-            // Comment count
-            if (post.commentCount > 0) {
-                Text(
-                    text = "View all ${post.commentCount} comments",
-                    fontSize = 14.sp,
-                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
-                    modifier = Modifier
-                        .padding(horizontal = 12.dp, vertical = 4.dp)
-                        .clickable { onCommentClick() }
-                )
             }
             
             Spacer(modifier = Modifier.height(8.dp))
