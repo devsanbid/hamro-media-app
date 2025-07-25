@@ -11,4 +11,8 @@ interface AuthRepository {
     suspend fun getCurrentUser(): FirebaseUser?
     suspend fun updateProfile(user: User): Result<Unit>
     suspend fun getUserProfile(userId: String): Result<User>
+    suspend fun followUser(currentUserId: String, targetUserId: String): Result<Unit>
+    suspend fun unfollowUser(currentUserId: String, targetUserId: String): Result<Unit>
+    suspend fun isFollowing(currentUserId: String, targetUserId: String): Result<Boolean>
+    suspend fun updateUserStats(userId: String, postsCount: Int? = null, followersCount: Int? = null, followingCount: Int? = null): Result<Unit>
 }
