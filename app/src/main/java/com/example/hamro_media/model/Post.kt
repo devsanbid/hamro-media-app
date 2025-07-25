@@ -8,7 +8,6 @@ data class Post(
     val imageUrl: String = "",
     val caption: String = "",
     val likeCount: Int = 0,
-    val commentCount: Int = 0,
     val likedBy: List<String> = emptyList(),
     val createdAt: Long = System.currentTimeMillis(),
     val updatedAt: Long = System.currentTimeMillis()

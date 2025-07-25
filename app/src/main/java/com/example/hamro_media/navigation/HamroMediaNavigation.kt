@@ -4,9 +4,17 @@ import androidx.compose.runtime.Composable
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import com.example.hamro_media.view.CreatePostActivity
 import com.example.hamro_media.view.HomeActivity
 import com.example.hamro_media.view.LoginActivity
+import com.example.hamro_media.view.MainLayoutActivity
+
+import com.example.hamro_media.view.MyLikesScreen
+import com.example.hamro_media.view.MyPostsScreen
+import com.example.hamro_media.view.NotificationsPlaceholder
+import com.example.hamro_media.view.ProfileScreen
 import com.example.hamro_media.view.RegisterActivity
+import com.example.hamro_media.view.SettingsPlaceholder
 import com.example.hamro_media.view.SplashActivity
 import com.example.hamro_media.viewmodel.AuthViewModel
 
@@ -61,17 +69,221 @@ fun HamroMediaNavigation(
         }
         
         composable("home") {
-            HomeActivity(
+            MainLayoutActivity(
+                currentRoute = "home",
                 onNavigateToCreatePost = {
-                    // TODO: Navigate to create post screen
+                    navController.navigate("create_post")
                 },
-                onNavigateToProfile = { userId ->
-                    // TODO: Navigate to profile screen
+                onNavigateToProfile = {
+                    navController.navigate("profile")
                 },
-                onNavigateToComments = { postId ->
-                    // TODO: Navigate to comments screen
+                onNavigateToMyPosts = {
+                    navController.navigate("my_posts")
+                },
+
+                onNavigateToMyLikes = {
+                    navController.navigate("my_likes")
+                },
+                onNavigateToSettings = {
+                    navController.navigate("settings")
+                },
+                onNavigateToNotifications = {
+                    navController.navigate("notifications")
+                },
+                onLogout = {
+                    navController.navigate("login") {
+                        popUpTo("home") { inclusive = true }
+                    }
+                },
+                authViewModel = authViewModel
+            ) {
+                HomeActivity(
+                    onNavigateToCreatePost = {
+                        navController.navigate("create_post")
+                    },
+                    onNavigateToProfile = { userId ->
+                        navController.navigate("profile")
+                    }
+                )
+            }
+        }
+        
+        composable("create_post") {
+            CreatePostActivity(
+                onNavigateBack = {
+                    navController.popBackStack()
+                },
+                onPostCreated = {
+                    navController.popBackStack()
                 }
             )
+        }
+        
+        composable("profile") {
+            MainLayoutActivity(
+                currentRoute = "profile",
+                onNavigateToCreatePost = {
+                    navController.navigate("create_post")
+                },
+                onNavigateToProfile = {
+                    
+                },
+                onNavigateToMyPosts = {
+                    navController.navigate("my_posts")
+                },
+
+                onNavigateToMyLikes = {
+                    navController.navigate("my_likes")
+                },
+                onNavigateToSettings = {
+                    navController.navigate("settings")
+                },
+                onNavigateToNotifications = {
+                    navController.navigate("notifications")
+                },
+                onLogout = {
+                    navController.navigate("login") {
+                        popUpTo("profile") { inclusive = true }
+                    }
+                },
+                authViewModel = authViewModel
+            ) {
+                ProfileScreen()
+            }
+        }
+        
+        composable("settings") {
+            MainLayoutActivity(
+                currentRoute = "settings",
+                onNavigateToCreatePost = {
+                    navController.navigate("create_post")
+                },
+                onNavigateToProfile = {
+                    navController.navigate("profile")
+                },
+                onNavigateToMyPosts = {
+                    navController.navigate("my_posts")
+                },
+
+                onNavigateToMyLikes = {
+                    navController.navigate("my_likes")
+                },
+                onNavigateToSettings = {
+                    
+                },
+                onNavigateToNotifications = {
+                    navController.navigate("notifications")
+                },
+                onLogout = {
+                    navController.navigate("login") {
+                        popUpTo("settings") { inclusive = true }
+                    }
+                },
+                authViewModel = authViewModel
+            ) {
+                SettingsPlaceholder()
+            }
+        }
+        
+        composable("notifications") {
+            MainLayoutActivity(
+                currentRoute = "notifications",
+                onNavigateToCreatePost = {
+                    navController.navigate("create_post")
+                },
+                onNavigateToProfile = {
+                    navController.navigate("profile")
+                },
+                onNavigateToMyPosts = {
+                    navController.navigate("my_posts")
+                },
+
+                onNavigateToMyLikes = {
+                    navController.navigate("my_likes")
+                },
+                onNavigateToSettings = {
+                    navController.navigate("settings")
+                },
+                onNavigateToNotifications = {
+                    
+                },
+                onLogout = {
+                    navController.navigate("login") {
+                        popUpTo("notifications") { inclusive = true }
+                    }
+                },
+                authViewModel = authViewModel
+            ) {
+                NotificationsPlaceholder()
+            }
+        }
+        
+        composable("my_posts") {
+            MainLayoutActivity(
+                currentRoute = "my_posts",
+                onNavigateToCreatePost = {
+                    navController.navigate("create_post")
+                },
+                onNavigateToProfile = {
+                    navController.navigate("profile")
+                },
+                onNavigateToMyPosts = {
+                    
+                },
+
+                onNavigateToMyLikes = {
+                    navController.navigate("my_likes")
+                },
+                onNavigateToSettings = {
+                    navController.navigate("settings")
+                },
+                onNavigateToNotifications = {
+                    navController.navigate("notifications")
+                },
+                onLogout = {
+                    navController.navigate("login") {
+                        popUpTo("my_posts") { inclusive = true }
+                    }
+                },
+                authViewModel = authViewModel
+            ) {
+                MyPostsScreen()
+            }
+        }
+        
+
+        
+        composable("my_likes") {
+            MainLayoutActivity(
+                currentRoute = "my_likes",
+                onNavigateToCreatePost = {
+                    navController.navigate("create_post")
+                },
+                onNavigateToProfile = {
+                    navController.navigate("profile")
+                },
+                onNavigateToMyPosts = {
+                    navController.navigate("my_posts")
+                },
+
+                onNavigateToMyLikes = {
+                    
+                },
+                onNavigateToSettings = {
+                    navController.navigate("settings")
+                },
+                onNavigateToNotifications = {
+                    navController.navigate("notifications")
+                },
+                onLogout = {
+                    navController.navigate("login") {
+                        popUpTo("my_likes") { inclusive = true }
+                    }
+                },
+                authViewModel = authViewModel
+            ) {
+                MyLikesScreen()
+            }
         }
     }
 }

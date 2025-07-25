@@ -134,6 +134,25 @@ class AuthViewModel(
                 .onSuccess { user ->
                     _currentUser.value = user
                 }
+                .onFailure { exception ->
+                    // If user profile doesn't exist in Firestore, create a basic user object
+                    val firebaseUser = authRepository.getCurrentUser()
+                    if (firebaseUser != null) {
+                        val basicUser = User(
+                            userId = firebaseUser.uid,
+                            username = firebaseUser.email?.substringBefore("@") ?: "user",
+                            email = firebaseUser.email ?: "",
+                            profileImageUrl = "",
+                            bio = "",
+                            followersCount = 0,
+                            followingCount = 0,
+                            postsCount = 0
+                        )
+                        _currentUser.value = basicUser
+                        // Optionally save this basic user to Firestore
+                        updateProfile(basicUser)
+                    }
+                }
         }
     }
 

@@ -1,0 +1,30 @@
+{
+  "project_info": {
+    "project_number": "948738450523",
+    "firebase_url": "https://meromedia-faa24-default-rtdb.asia-southeast1.firebasedatabase.app",
+    "project_id": "meromedia-faa24",
+    "storage_bucket": "meromedia-faa24.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:948738450523:android:923105a030abb81433cb7e",
+        "android_client_info": {
+          "package_name": "com.example.hamro_media"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBJYikPWR-aLhMQ4tLD_vm7ZAvHMTZXWRw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
