@@ -83,13 +83,27 @@ fun ProfileActivity(
     val currentUser by actualAuthViewModel.currentUser.collectAsState()
     val postState by actualPostViewModel.postState.collectAsState()
     
+    // State for other user's profile
+    var otherUser by remember { mutableStateOf<User?>(null) }
+    var isLoadingOtherUser by remember { mutableStateOf(false) }
+    
     // Determine which user to display
     val isCurrentUserProfile = userId == null || userId == currentUser?.userId
     val displayUser = if (isCurrentUserProfile) {
         currentUser
     } else {
-        // For now, we'll use currentUser as placeholder - this needs proper user profile loading
-        currentUser
+        otherUser
+    }
+    
+    // Load other user's profile if needed
+    LaunchedEffect(userId, currentUser) {
+        if (!isCurrentUserProfile && userId != null) {
+            isLoadingOtherUser = true
+            actualAuthViewModel.loadOtherUserProfile(userId) { user ->
+                otherUser = user
+                isLoadingOtherUser = false
+            }
+        }
     }
     
     // Load user posts
@@ -141,7 +155,7 @@ fun ProfileActivity(
             )
         }
     ) { paddingValues ->
-        if (displayUser == null && authState.isLoading) {
+        if (displayUser == null && (authState.isLoading || isLoadingOtherUser)) {
             Box(
                 modifier = Modifier
                     .fillMaxSize()
@@ -366,18 +380,64 @@ fun ProfileHeader(
                     )
                 }
             } else {
+                var isFollowing by remember { mutableStateOf(false) }
+                var isFollowLoading by remember { mutableStateOf(false) }
+                
+                // Check follow status when user changes
+                LaunchedEffect(displayUser?.userId, currentUser?.userId) {
+                    displayUser?.userId?.let { targetUserId ->
+                        actualAuthViewModel.checkIfFollowing(targetUserId) { following ->
+                            isFollowing = following
+                        }
+                    }
+                }
+                
                 Button(
-                    onClick = { /* TODO: Follow/Unfollow functionality */ },
+                    onClick = {
+                        displayUser?.userId?.let { targetUserId ->
+                            isFollowLoading = true
+                            if (isFollowing) {
+                                actualAuthViewModel.unfollowUser(targetUserId) { success ->
+                                    if (success) {
+                                        isFollowing = false
+                                    }
+                                    isFollowLoading = false
+                                }
+                            } else {
+                                actualAuthViewModel.followUser(targetUserId) { success ->
+                                    if (success) {
+                                        isFollowing = true
+                                    }
+                                    isFollowLoading = false
+                                }
+                            }
+                        }
+                    },
                     modifier = Modifier.fillMaxWidth(),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.primary
-                    ),
-                    shape = RoundedCornerShape(8.dp)
+                    colors = if (isFollowing) {
+                        ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.surfaceVariant,
+                            contentColor = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    } else {
+                        ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.primary
+                        )
+                    },
+                    shape = RoundedCornerShape(8.dp),
+                    enabled = !isFollowLoading
                 ) {
-                    Text(
-                        text = "Follow", // TODO: Change based on follow status
-                        fontWeight = FontWeight.Medium
-                    )
+                    if (isFollowLoading) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(16.dp),
+                            strokeWidth = 2.dp
+                        )
+                    } else {
+                        Text(
+                            text = if (isFollowing) "Following" else "Follow",
+                            fontWeight = FontWeight.Medium
+                        )
+                    }
                 }
             }
         }
