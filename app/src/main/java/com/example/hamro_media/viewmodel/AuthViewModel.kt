@@ -133,6 +133,7 @@ class AuthViewModel(
             authRepository.getUserProfile(userId)
                 .onSuccess { user ->
                     _currentUser.value = user
+                    _authState.value = _authState.value.copy(isLoading = false)
                 }
                 .onFailure { exception ->
                     // If user profile doesn't exist in Firestore, create a basic user object
@@ -149,6 +150,7 @@ class AuthViewModel(
                             postsCount = 0
                         )
                         _currentUser.value = basicUser
+                        _authState.value = _authState.value.copy(isLoading = false)
                         // Optionally save this basic user to Firestore
                         updateProfile(basicUser)
                     }
@@ -162,6 +164,69 @@ class AuthViewModel(
 
     fun clearPasswordResetFlag() {
         _authState.value = _authState.value.copy(passwordResetSent = false)
+    }
+
+    fun loadOtherUserProfile(userId: String, onResult: (User?) -> Unit) {
+        viewModelScope.launch {
+            authRepository.getUserProfile(userId)
+                .onSuccess { user ->
+                    onResult(user)
+                }
+                .onFailure {
+                    onResult(null)
+                }
+        }
+    }
+
+    fun followUser(targetUserId: String, onResult: (Boolean) -> Unit) {
+        viewModelScope.launch {
+            val currentUserId = _currentUser.value?.userId
+            if (currentUserId != null) {
+                authRepository.followUser(currentUserId, targetUserId)
+                    .onSuccess {
+                        onResult(true)
+                    }
+                    .onFailure {
+                        onResult(false)
+                    }
+            } else {
+                onResult(false)
+            }
+        }
+    }
+
+    fun unfollowUser(targetUserId: String, onResult: (Boolean) -> Unit) {
+        viewModelScope.launch {
+            val currentUserId = _currentUser.value?.userId
+            if (currentUserId != null) {
+                authRepository.unfollowUser(currentUserId, targetUserId)
+                    .onSuccess {
+                        onResult(true)
+                    }
+                    .onFailure {
+                        onResult(false)
+                    }
+            } else {
+                onResult(false)
+            }
+        }
+    }
+
+    fun checkIfFollowing(targetUserId: String, onResult: (Boolean) -> Unit) {
+        viewModelScope.launch {
+            val currentUserId = _currentUser.value?.userId
+            if (currentUserId != null) {
+                authRepository.isFollowing(currentUserId, targetUserId)
+                    .onSuccess { isFollowing ->
+                        onResult(isFollowing)
+                    }
+                    .onFailure {
+                        onResult(false)
+                    }
+            } else {
+                onResult(false)
+            }
+        }
     }
 }
 
