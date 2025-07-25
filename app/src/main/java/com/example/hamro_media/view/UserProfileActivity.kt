@@ -47,22 +47,21 @@ fun UserProfileActivity(
     
     // Load user profile and posts
     LaunchedEffect(userId) {
-        // TODO: Load user profile
-        // authViewModel.loadUserProfile(userId)
-        // postViewModel.loadUserPosts(userId)
+        isLoading = true
         
-        // Sample user data
-        profileUser = User(
-            userId = userId,
-            username = "sample_user",
-            email = "sample@example.com",
-            profileImageUrl = "",
-            bio = "This is a sample user profile",
-            followersCount = 150,
-            followingCount = 200,
-            postsCount = 25
-        )
-        isLoading = false
+        // Load user profile
+        actualAuthViewModel.loadOtherUserProfile(userId) { user ->
+            profileUser = user
+            isLoading = false
+        }
+        
+        // Load user posts
+        actualPostViewModel.loadUserPosts(userId)
+        
+        // Check if current user is following this user
+        actualAuthViewModel.checkIfFollowing(userId) { following ->
+            isFollowing = following
+        }
     }
     
     Scaffold(
@@ -107,8 +106,31 @@ fun UserProfileActivity(
                         isCurrentUser = user.userId == currentUser?.userId,
                         isFollowing = isFollowing,
                         onFollowClick = {
-                            // TODO: Implement follow/unfollow
-                            isFollowing = !isFollowing
+                            if (isFollowing) {
+                                actualAuthViewModel.unfollowUser(userId) { success ->
+                                    if (success) {
+                                        isFollowing = false
+                                        // Update the user's follower count locally
+                                        profileUser?.let { user ->
+                                            profileUser = user.copy(
+                                                followersCount = (user.followersCount - 1).coerceAtLeast(0)
+                                            )
+                                        }
+                                    }
+                                }
+                            } else {
+                                actualAuthViewModel.followUser(userId) { success ->
+                                    if (success) {
+                                        isFollowing = true
+                                        // Update the user's follower count locally
+                                        profileUser?.let { user ->
+                                            profileUser = user.copy(
+                                                followersCount = user.followersCount + 1
+                                            )
+                                        }
+                                    }
+                                }
+                            }
                         }
                     )
                 }
