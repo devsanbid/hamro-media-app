@@ -72,6 +72,23 @@ class PostRepositoryImpl(
         }
     }
 
+    override suspend fun getLikedPosts(userId: String): Result<List<Post>> {
+        return try {
+            val querySnapshot = firestore.collection("posts")
+                .whereArrayContains("likedBy", userId)
+                .orderBy("createdAt", Query.Direction.DESCENDING)
+                .get()
+                .await()
+            
+            val posts = querySnapshot.documents.mapNotNull { document ->
+                document.toObject(Post::class.java)
+            }
+            Result.success(posts)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
     override suspend fun updatePost(post: Post): Result<Unit> {
         return try {
             firestore.collection("posts")
