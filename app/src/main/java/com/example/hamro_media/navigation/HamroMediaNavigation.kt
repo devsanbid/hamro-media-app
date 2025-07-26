@@ -4,7 +4,10 @@ import androidx.compose.runtime.Composable
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.compose.ui.platform.LocalContext
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.hamro_media.view.CreatePostActivity
+import com.example.hamro_media.view.EditPostActivity
 import com.example.hamro_media.view.HomeActivity
 import com.example.hamro_media.view.LoginActivity
 import com.example.hamro_media.view.MainLayoutActivity
@@ -17,6 +20,7 @@ import com.example.hamro_media.view.RegisterActivity
 import com.example.hamro_media.view.SettingsPlaceholder
 import com.example.hamro_media.view.SplashActivity
 import com.example.hamro_media.viewmodel.AuthViewModel
+import com.example.hamro_media.viewmodel.PostViewModel
 
 @Composable
 fun HamroMediaNavigation(
@@ -219,6 +223,9 @@ fun HamroMediaNavigation(
         }
         
         composable("my_posts") {
+            val context = LocalContext.current
+            val postViewModel: PostViewModel = viewModel { PostViewModel(context) }
+            
             MainLayoutActivity(
                 currentRoute = "my_posts",
                 onNavigateToCreatePost = {
@@ -247,13 +254,19 @@ fun HamroMediaNavigation(
                 },
                 authViewModel = authViewModel
             ) {
-                MyPostsScreen()
+                MyPostsScreen(
+                    authViewModel = authViewModel,
+                    postViewModel = postViewModel
+                )
             }
         }
         
 
         
         composable("my_likes") {
+            val context = LocalContext.current
+            val postViewModel: PostViewModel = viewModel { PostViewModel(context) }
+            
             MainLayoutActivity(
                 currentRoute = "my_likes",
                 onNavigateToCreatePost = {
@@ -282,7 +295,10 @@ fun HamroMediaNavigation(
                 },
                 authViewModel = authViewModel
             ) {
-                MyLikesScreen()
+                MyLikesScreen(
+                    authViewModel = authViewModel,
+                    postViewModel = postViewModel
+                )
             }
         }
     }
