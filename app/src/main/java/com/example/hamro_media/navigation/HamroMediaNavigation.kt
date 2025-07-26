@@ -78,6 +78,9 @@ fun HamroMediaNavigation(
                 onNavigateToCreatePost = {
                     navController.navigate("create_post")
                 },
+                onNavigateToHome = {
+                    navController.navigate("home")
+                },
                 onNavigateToProfile = {
                     navController.navigate("profile")
                 },
@@ -129,6 +132,9 @@ fun HamroMediaNavigation(
                 onNavigateToCreatePost = {
                     navController.navigate("create_post")
                 },
+                onNavigateToHome = {
+                    navController.navigate("home")
+                },
                 onNavigateToProfile = {
                     
                 },
@@ -162,6 +168,9 @@ fun HamroMediaNavigation(
                 onNavigateToCreatePost = {
                     navController.navigate("create_post")
                 },
+                onNavigateToHome = {
+                    navController.navigate("home")
+                },
                 onNavigateToProfile = {
                     navController.navigate("profile")
                 },
@@ -194,6 +203,9 @@ fun HamroMediaNavigation(
                 currentRoute = "notifications",
                 onNavigateToCreatePost = {
                     navController.navigate("create_post")
+                },
+                onNavigateToHome = {
+                    navController.navigate("home")
                 },
                 onNavigateToProfile = {
                     navController.navigate("profile")
@@ -230,6 +242,9 @@ fun HamroMediaNavigation(
                 currentRoute = "my_posts",
                 onNavigateToCreatePost = {
                     navController.navigate("create_post")
+                },
+                onNavigateToHome = {
+                    navController.navigate("home")
                 },
                 onNavigateToProfile = {
                     navController.navigate("profile")
@@ -271,6 +286,9 @@ fun HamroMediaNavigation(
                 currentRoute = "my_likes",
                 onNavigateToCreatePost = {
                     navController.navigate("create_post")
+                },
+                onNavigateToHome = {
+                    navController.navigate("home")
                 },
                 onNavigateToProfile = {
                     navController.navigate("profile")

@@ -74,6 +74,7 @@ data class NavigationItem(
 fun MainLayoutActivity(
     currentRoute: String = "home",
     onNavigateToCreatePost: () -> Unit,
+    onNavigateToHome: () -> Unit,
     onNavigateToProfile: () -> Unit,
     onNavigateToMyPosts: () -> Unit,
     onNavigateToMyLikes: () -> Unit,
@@ -203,6 +204,7 @@ fun MainLayoutActivity(
                                     drawerState.close()
                                 }
                                 when (item.route) {
+                                    "home" -> onNavigateToHome()
                                     "profile" -> onNavigateToProfile()
                                     "my_posts" -> onNavigateToMyPosts()
                                     "my_likes" -> onNavigateToMyLikes()
