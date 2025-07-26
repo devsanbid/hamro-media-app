@@ -26,19 +26,31 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
+import com.example.hamro_media.viewmodel.AuthViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ProfileScreen() {
+fun ProfileScreen(
+    authViewModel: AuthViewModel = viewModel()
+) {
+    val currentUser by authViewModel.currentUser.collectAsState()
+    
     var isEditing by remember { mutableStateOf(false) }
     var selectedImageUri by remember { mutableStateOf<Uri?>(null) }
-    var fullName by remember { mutableStateOf(TextFieldValue("John Doe")) }
-    var username by remember { mutableStateOf(TextFieldValue("@johndoe")) }
-    var email by remember { mutableStateOf(TextFieldValue("john.doe@example.com")) }
-    var bio by remember { mutableStateOf(TextFieldValue("Software developer passionate about mobile apps and technology. Love to share knowledge and connect with like-minded people.")) }
-    var location by remember { mutableStateOf(TextFieldValue("San Francisco, CA")) }
-    var website by remember { mutableStateOf(TextFieldValue("https://johndoe.dev")) }
+    var username by remember { mutableStateOf(TextFieldValue("")) }
+    var email by remember { mutableStateOf(TextFieldValue("")) }
+    var bio by remember { mutableStateOf(TextFieldValue("")) }
+    
+    // Initialize fields with current user data
+    LaunchedEffect(currentUser) {
+        currentUser?.let { user ->
+            username = TextFieldValue(user.username)
+            email = TextFieldValue(user.email)
+            bio = TextFieldValue(user.bio)
+        }
+    }
     
     val imagePickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
@@ -145,15 +157,6 @@ fun ProfileScreen() {
         Spacer(modifier = Modifier.height(32.dp))
         
         ProfileField(
-            label = "Full Name",
-            value = fullName,
-            onValueChange = { fullName = it },
-            isEditing = isEditing
-        )
-        
-        Spacer(modifier = Modifier.height(16.dp))
-        
-        ProfileField(
             label = "Username",
             value = username,
             onValueChange = { username = it },
@@ -177,24 +180,6 @@ fun ProfileScreen() {
             onValueChange = { bio = it },
             isEditing = isEditing,
             maxLines = 4
-        )
-        
-        Spacer(modifier = Modifier.height(16.dp))
-        
-        ProfileField(
-            label = "Location",
-            value = location,
-            onValueChange = { location = it },
-            isEditing = isEditing
-        )
-        
-        Spacer(modifier = Modifier.height(16.dp))
-        
-        ProfileField(
-            label = "Website",
-            value = website,
-            onValueChange = { website = it },
-            isEditing = isEditing
         )
         
         Spacer(modifier = Modifier.height(32.dp))
@@ -244,9 +229,9 @@ fun ProfileScreen() {
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceEvenly
                 ) {
-                    StatItem(label = "Posts", value = "24")
-                    StatItem(label = "Followers", value = "1.2K")
-                    StatItem(label = "Following", value = "456")
+                    StatItem(label = "Posts", value = currentUser?.postsCount?.toString() ?: "0")
+                    StatItem(label = "Followers", value = currentUser?.followersCount?.toString() ?: "0")
+                    StatItem(label = "Following", value = currentUser?.followingCount?.toString() ?: "0")
                 }
             }
         }
