@@ -60,6 +60,26 @@ class PostViewModel(
         }
     }
 
+    fun loadLikedPosts(userId: String) {
+        viewModelScope.launch {
+            _postState.value = _postState.value.copy(isLoading = true, error = null)
+            
+            postRepository.getLikedPosts(userId)
+                .onSuccess { posts ->
+                    _postState.value = _postState.value.copy(
+                        isLoading = false,
+                        likedPosts = posts
+                    )
+                }
+                .onFailure { exception ->
+                    _postState.value = _postState.value.copy(
+                        isLoading = false,
+                        error = exception.message
+                    )
+                }
+        }
+    }
+
     fun createPost(post: Post, imageUri: String) {
         viewModelScope.launch {
             _postState.value = _postState.value.copy(isLoading = true, error = null)
@@ -138,6 +158,7 @@ data class PostState(
     val isLoading: Boolean = false,
     val posts: List<Post> = emptyList(),
     val userPosts: List<Post> = emptyList(),
+    val likedPosts: List<Post> = emptyList(),
     val isPostCreated: Boolean = false,
     val error: String? = null
 )
