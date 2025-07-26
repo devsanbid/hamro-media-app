@@ -52,6 +52,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import com.example.hamro_media.model.Post
+import com.example.hamro_media.model.User
 import com.example.hamro_media.viewmodel.PostViewModel
 import com.example.hamro_media.viewmodel.AuthViewModel
 import java.text.SimpleDateFormat
@@ -62,6 +63,7 @@ import java.util.Locale
 fun HomeActivity(
     onNavigateToCreatePost: () -> Unit,
     onNavigateToProfile: (String) -> Unit,
+    onNavigateToComments: (String) -> Unit = {},
     postViewModel: PostViewModel? = null,
     authViewModel: AuthViewModel? = null
 ) {
@@ -121,6 +123,7 @@ fun HomeActivity(
                         items(postState.posts) { post ->
                             PostItem(
                                 post = post,
+                                currentUser = currentUser,
                                 onLikeClick = { 
                                     currentUser?.let { user ->
                                         actualPostViewModel.likePost(post.id, user.userId)
@@ -131,6 +134,7 @@ fun HomeActivity(
                                         actualPostViewModel.unlikePost(post.id, user.userId)
                                     }
                                 },
+                                onCommentClick = { onNavigateToComments(post.id) },
                                 onProfileClick = { onNavigateToProfile(post.userId) }
                             )
                         }
@@ -180,11 +184,12 @@ fun HomeActivity(
 @Composable
 fun PostItem(
     post: Post,
+    currentUser: User?,
     onLikeClick: () -> Unit,
     onUnlikeClick: () -> Unit,
+    onCommentClick: () -> Unit,
     onProfileClick: () -> Unit
-) {
-    Card(
+) {Card(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 8.dp),
@@ -263,7 +268,7 @@ fun PostItem(
             ) {
                 IconButton(
                     onClick = {
-                        if (post.isLikedByCurrentUser) {
+                        if (post.isLikedByCurrentUser(currentUser?.userId)) {
                             onUnlikeClick()
                         } else {
                             onLikeClick()
@@ -271,13 +276,13 @@ fun PostItem(
                     }
                 ) {
                     Icon(
-                        imageVector = if (post.isLikedByCurrentUser) {
+                        imageVector = if (post.isLikedByCurrentUser(currentUser?.userId)) {
                             Icons.Default.Favorite
                         } else {
                             Icons.Default.FavoriteBorder
                         },
                         contentDescription = "Like",
-                        tint = if (post.isLikedByCurrentUser) {
+                        tint = if (post.isLikedByCurrentUser(currentUser?.userId)) {
                             Color.Red
                         } else {
                             MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)

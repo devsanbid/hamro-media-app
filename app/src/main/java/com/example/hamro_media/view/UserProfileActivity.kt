@@ -1,5 +1,7 @@
 package com.example.hamro_media.view
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
@@ -7,8 +9,13 @@ import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.*
+import androidx.compose.ui.graphics.Color
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -174,7 +181,14 @@ fun UserProfileActivity(
                         items(userPosts) { post ->
                             PostGridItem(
                                 post = post,
-                                onClick = { onPostClick(post.id) }
+                                onClick = { onPostClick(post.id) },
+                                onLikeClick = {
+                                    actualPostViewModel.likePost(post.id, currentUser?.userId ?: "")
+                                },
+                                onUnlikeClick = {
+                                    actualPostViewModel.unlikePost(post.id, currentUser?.userId ?: "")
+                                },
+                                currentUser = currentUser
                             )
                         }
                     }
@@ -323,7 +337,13 @@ fun ProfileStat(
 @Composable
 fun PostGridItem(
     post: Post,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    onLikeClick: (() -> Unit)? = null,
+    onUnlikeClick: (() -> Unit)? = null,
+    onEditClick: (() -> Unit)? = null,
+    onDeleteClick: (() -> Unit)? = null,
+    currentUser: User? = null,
+    isCurrentUserPost: Boolean = false
 ) {
     Card(
         onClick = onClick,
@@ -331,11 +351,94 @@ fun PostGridItem(
             .aspectRatio(1f)
             .fillMaxWidth()
     ) {
-        AsyncImage(
-            model = post.imageUrl,
-            contentDescription = "Post",
-            modifier = Modifier.fillMaxSize(),
-            contentScale = ContentScale.Crop
-        )
+        Box {
+            AsyncImage(
+                model = post.imageUrl,
+                contentDescription = "Post",
+                modifier = Modifier.fillMaxSize(),
+                contentScale = ContentScale.Crop
+            )
+            
+            // Edit/Delete options for current user's posts
+            if (isCurrentUserPost && onEditClick != null && onDeleteClick != null) {
+                Row(
+                    modifier = Modifier
+                        .align(Alignment.TopEnd)
+                        .padding(8.dp)
+                ) {
+                    IconButton(
+                        onClick = onEditClick,
+                        modifier = Modifier
+                            .background(
+                                Color.Black.copy(alpha = 0.6f),
+                                CircleShape
+                            )
+                            .size(32.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Edit,
+                            contentDescription = "Edit",
+                            tint = Color.White,
+                            modifier = Modifier.size(16.dp)
+                        )
+                    }
+                    Spacer(modifier = Modifier.width(4.dp))
+                    IconButton(
+                        onClick = onDeleteClick,
+                        modifier = Modifier
+                            .background(
+                                Color.Red.copy(alpha = 0.8f),
+                                CircleShape
+                            )
+                            .size(32.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Delete,
+                            contentDescription = "Delete",
+                            tint = Color.White,
+                            modifier = Modifier.size(16.dp)
+                        )
+                    }
+                }
+            }
+            
+            // Like button overlay
+            if (onLikeClick != null && onUnlikeClick != null && currentUser != null) {
+                val isLiked = post.isLikedByCurrentUser(currentUser.userId)
+                
+                IconButton(
+                    onClick = {
+                        if (isLiked) {
+                            onUnlikeClick()
+                        } else {
+                            onLikeClick()
+                        }
+                    },
+                    modifier = Modifier
+                        .align(Alignment.BottomEnd)
+                        .padding(8.dp)
+                        .background(
+                            Color.Black.copy(alpha = 0.6f),
+                            CircleShape
+                        )
+                        .size(32.dp)
+                ) {
+                    Icon(
+                        imageVector = if (isLiked) {
+                            Icons.Default.Favorite
+                        } else {
+                            Icons.Default.FavoriteBorder
+                        },
+                        contentDescription = "Like",
+                        tint = if (isLiked) {
+                            Color.Red
+                        } else {
+                            Color.White
+                        },
+                        modifier = Modifier.size(20.dp)
+                    )
+                }
+            }
+        }
     }
 }

@@ -47,18 +47,19 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.window.Dialog
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import com.example.hamro_media.model.Post
@@ -90,6 +91,10 @@ fun ProfileActivity(
     var otherUser by remember { mutableStateOf<User?>(null) }
     var isLoadingOtherUser by remember { mutableStateOf(false) }
     
+    // State for edit post dialog
+    var showEditDialog by remember { mutableStateOf(false) }
+    var postToEdit by remember { mutableStateOf<Post?>(null) }
+    
     // Determine which user to display
     val isCurrentUserProfile = userId == null || userId == currentUser?.userId
     val displayUser = if (isCurrentUserProfile) {
@@ -109,9 +114,11 @@ fun ProfileActivity(
         }
     }
     
-    // Load user posts
-    LaunchedEffect(userId) {
-        actualPostViewModel.loadUserPosts(userId ?: currentUser?.userId ?: "")
+    // Load user posts for the profile being viewed
+    LaunchedEffect(displayUser?.userId) {
+        displayUser?.userId?.let { targetUserId ->
+            actualPostViewModel.loadUserPosts(targetUserId)
+        }
     }
     
     Scaffold(
@@ -181,7 +188,10 @@ fun ProfileActivity(
                 ProfileHeader(
                     user = displayUser,
                     isCurrentUser = isCurrentUserProfile,
-                    onEditProfile = onNavigateToEditProfile
+                    onEditProfile = onNavigateToEditProfile,
+                    displayUser = displayUser,
+                    currentUser = currentUser,
+                    authViewModel = actualAuthViewModel
                 )
                 
                 Spacer(modifier = Modifier.height(16.dp))
@@ -249,7 +259,26 @@ fun ProfileActivity(
                             items(postState.userPosts) { post ->
                                 PostGridItem(
                                     post = post,
-                                    onClick = { /* Handle post click */ }
+                                    onClick = { /* Handle post click */ },
+                                    onLikeClick = {
+                                        actualPostViewModel.likePost(post.id, currentUser?.userId ?: "")
+                                    },
+                                    onUnlikeClick = {
+                                        actualPostViewModel.unlikePost(post.id, currentUser?.userId ?: "")
+                                    },
+                                    onEditClick = if (post.userId == currentUser?.userId) {
+                                        {
+                                            postToEdit = post
+                                            showEditDialog = true
+                                        }
+                                    } else null,
+                                    onDeleteClick = if (post.userId == currentUser?.userId) {
+                                        {
+                                            actualPostViewModel.deletePost(post.id)
+                                        }
+                                    } else null,
+                                    currentUser = currentUser,
+                                    isCurrentUserPost = post.userId == currentUser?.userId
                                 )
                             }
                         }
@@ -259,6 +288,30 @@ fun ProfileActivity(
                 Spacer(modifier = Modifier.height(16.dp))
             }
         }
+        
+        // Edit Post Dialog
+        if (showEditDialog && postToEdit != null) {
+            Dialog(
+                onDismissRequest = {
+                    showEditDialog = false
+                    postToEdit = null
+                }
+            ) {
+                EditPostActivity(
+                    post = postToEdit!!,
+                    onNavigateBack = {
+                        showEditDialog = false
+                        postToEdit = null
+                        // Reload posts after edit
+                        displayUser?.userId?.let { targetUserId ->
+                            actualPostViewModel.loadUserPosts(targetUserId)
+                        }
+                    },
+                    authViewModel = actualAuthViewModel,
+                    postViewModel = actualPostViewModel
+                )
+            }
+        }
     }
 }
 
@@ -266,7 +319,10 @@ fun ProfileActivity(
 fun ProfileHeader(
     user: User?,
     isCurrentUser: Boolean,
-    onEditProfile: () -> Unit
+    onEditProfile: () -> Unit,
+    displayUser: User? = null,
+    currentUser: User? = null,
+    authViewModel: AuthViewModel? = null
 ) {
     Card(
         modifier = Modifier
@@ -389,7 +445,7 @@ fun ProfileHeader(
                 // Check follow status when user changes
                 LaunchedEffect(displayUser?.userId, currentUser?.userId) {
                     displayUser?.userId?.let { targetUserId ->
-                        actualAuthViewModel.checkIfFollowing(targetUserId) { following ->
+                        authViewModel?.checkIfFollowing(targetUserId) { following ->
                             isFollowing = following
                         }
                     }
@@ -400,14 +456,14 @@ fun ProfileHeader(
                         displayUser?.userId?.let { targetUserId ->
                             isFollowLoading = true
                             if (isFollowing) {
-                                actualAuthViewModel.unfollowUser(targetUserId) { success ->
+                                authViewModel?.unfollowUser(targetUserId) { success ->
                                     if (success) {
                                         isFollowing = false
                                     }
                                     isFollowLoading = false
                                 }
                             } else {
-                                actualAuthViewModel.followUser(targetUserId) { success ->
+                                authViewModel?.followUser(targetUserId) { success ->
                                     if (success) {
                                         isFollowing = true
                                     }
